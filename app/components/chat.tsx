@@ -357,7 +357,7 @@ function useScrollToBottom() {
 export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
-  fillInWithAudio: (audio: Blob) => void;
+  inputFromAudio: (audio: Blob) => void;
   hitBottom: boolean;
 }) {
   const chatStore = useChatStore();
@@ -431,7 +431,7 @@ export function ChatActions(props: {
             isRecording ? "visible" : "invisible"
           }`}
           record={isRecording}
-          onStop={({ blob }) => props.fillInWithAudio(blob)}
+          onStop={({ blob }) => props.inputFromAudio(blob)}
         />
         <div
           onMouseDown={handleStartRecording}
@@ -676,7 +676,7 @@ export function Chat(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onAudioFilledIn = (blob: Blob) => {
+  const inputFromAudio = (blob: Blob) => {
     console.log("not implement");
   };
 
@@ -845,7 +845,7 @@ export function Chat(props: {
         <ChatActions
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
-          fillInWithAudio={onAudioFilledIn}
+          inputFromAudio={inputFromAudio}
           hitBottom={hitBottom}
         />
         <div className={styles["chat-input-panel-inner"]}>
