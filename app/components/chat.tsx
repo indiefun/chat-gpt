@@ -1,6 +1,5 @@
 import { useDebounce, useDebouncedCallback } from "use-debounce";
 import { memo, useState, useRef, useEffect, useLayoutEffect } from "react";
-import { ReactMic } from "react-mic";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -64,6 +63,10 @@ const Markdown = dynamic(
 );
 
 const Emoji = dynamic(async () => (await import("emoji-picker-react")).Emoji, {
+  loading: () => <LoadingIcon />,
+});
+
+const ReactMic = dynamic(async () => (await import("react-mic")).ReactMic, {
   loading: () => <LoadingIcon />,
 });
 
