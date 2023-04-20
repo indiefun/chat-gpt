@@ -21,6 +21,14 @@
     &:not(:last-child) {
       margin-right: 5px;
     }
+
+    &:last-child {
+      margin-left: auto;
+    }
+  }
+
+  .chat-input-action-tip {
+    height: 1rem;
   }
 }
 

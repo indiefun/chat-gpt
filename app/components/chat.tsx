@@ -1,5 +1,6 @@
 import { useDebounce, useDebouncedCallback } from "use-debounce";
 import { memo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import { ReactMic } from "react-mic";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -20,6 +21,7 @@ import DarkIcon from "../icons/dark.svg";
 import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
+import RecordIcon from "../icons/record.svg";
 
 import {
   Message,
@@ -52,6 +54,7 @@ import styles from "./home.module.scss";
 import chatStyle from "./chat.module.scss";
 
 import { Input, Modal, showModal } from "./ui-lib";
+import { func } from "prop-types";
 
 const Markdown = dynamic(
   async () => memo((await import("./markdown")).Markdown),
@@ -351,6 +354,7 @@ function useScrollToBottom() {
 export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
+  fillInWithAudio: (audio: Blob) => void;
   hitBottom: boolean;
 }) {
   const chatStore = useChatStore();
@@ -368,6 +372,15 @@ export function ChatActions(props: {
   // stop all responses
   const couldStop = ControllerPool.hasPending();
   const stopAll = () => ControllerPool.stopAll();
+
+  // record audio input
+  const [isRecording, setIsRecording] = useState(false);
+  function handleStartRecording() {
+    setIsRecording(true);
+  }
+  function handleStopRecording() {
+    setIsRecording(false);
+  }
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
@@ -407,6 +420,27 @@ export function ChatActions(props: {
         ) : theme === Theme.Dark ? (
           <DarkIcon />
         ) : null}
+      </div>
+
+      <div className={`${chatStyle["chat-input-action"]} clickable`}>
+        <ReactMic
+          className={`${chatStyle["chat-input-action-tip"]} ${
+            isRecording ? "visible" : "invisible"
+          }`}
+          record={isRecording}
+          onStop={({ blob }) => props.fillInWithAudio(blob)}
+        />
+        <div
+          onMouseDown={handleStartRecording}
+          onMouseUp={handleStopRecording}
+          onTouchStart={handleStartRecording}
+          onTouchEnd={handleStopRecording}
+          onContextMenu={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <RecordIcon />
+        </div>
       </div>
     </div>
   );
@@ -639,6 +673,10 @@ export function Chat(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const onAudioFilledIn = (blob: Blob) => {
+    console.log("not implement");
+  };
+
   return (
     <div className={styles.chat} key={session.id}>
       <div className={styles["window-header"]}>
@@ -804,6 +842,7 @@ export function Chat(props: {
         <ChatActions
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
+          fillInWithAudio={onAudioFilledIn}
           hitBottom={hitBottom}
         />
         <div className={styles["chat-input-panel-inner"]}>
