@@ -24,9 +24,11 @@ export async function requestOpenai(req: NextRequest) {
 
   return fetch(`${baseUrl}/${openaiPath}`, {
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": req.headers.get("Content-Type") ?? "application/json",
       Authorization: `Bearer ${apiKey}`,
-      ...(process.env.OPENAI_ORG_ID && { "OpenAI-Organization": process.env.OPENAI_ORG_ID }),
+      ...(process.env.OPENAI_ORG_ID && {
+        "OpenAI-Organization": process.env.OPENAI_ORG_ID,
+      }),
     },
     method: req.method,
     body: req.body,

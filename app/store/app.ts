@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { type ChatCompletionResponseMessage } from "openai";
 import {
   ControllerPool,
+  requestAudioTranscriptions,
   requestChatStream,
   requestWithPrompt,
 } from "../requests";
@@ -211,6 +212,7 @@ interface ChatStore {
   currentSession: () => ChatSession;
   onNewMessage: (message: Message) => void;
   onUserInput: (content: string) => Promise<void>;
+  onAudioInput: (blob: Blob) => Promise<string>;
   summarizeSession: () => void;
   updateStat: (message: Message) => void;
   updateCurrentSession: (updater: (session: ChatSession) => void) => void;
@@ -375,6 +377,12 @@ export const useChatStore = create<ChatStore>()(
         });
         get().updateStat(message);
         get().summarizeSession();
+      },
+
+      async onAudioInput(blob: Blob) {
+        const res = await requestAudioTranscriptions(blob);
+        if (res) return res.text;
+        throw new Error("Failed to transcribe audio");
       },
 
       async onUserInput(content) {

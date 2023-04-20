@@ -52,7 +52,7 @@ import { IconButton } from "./button";
 import styles from "./home.module.scss";
 import chatStyle from "./chat.module.scss";
 
-import { Input, Modal, showModal } from "./ui-lib";
+import { Input, Modal, showModal, showToast } from "./ui-lib";
 import { func } from "prop-types";
 
 const Markdown = dynamic(
@@ -677,7 +677,11 @@ export function Chat(props: {
   }, []);
 
   const inputFromAudio = (blob: Blob) => {
-    console.log("not implement");
+    chatStore
+      .onAudioInput(blob)
+      .then((text) => setUserInput(`${userInput}${text}`))
+      .catch((error) => showToast(error))
+      .finally(() => setIsLoading(false));
   };
 
   return (

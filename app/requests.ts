@@ -74,6 +74,22 @@ export async function requestChat(messages: Message[]) {
   }
 }
 
+export async function requestAudioTranscriptions(blob: Blob) {
+  const file = new File([blob], "audio.webm", { type: blob.type });
+  const body = new FormData();
+  body.set("file", file);
+  body.set("model", "whisper-1");
+  const res = await fetch("/api/openai?_vercel_no_cache=1", {
+    method: "POST",
+    headers: {
+      path: "v1/audio/transcriptions",
+      ...getHeaders(),
+    },
+    body: body,
+  });
+  return (await res.json()) as { text: string };
+}
+
 export async function requestUsage() {
   const formatDate = (d: Date) =>
     `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
