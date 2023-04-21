@@ -53,7 +53,7 @@ import styles from "./home.module.scss";
 import chatStyle from "./chat.module.scss";
 
 import { Input, Modal, showModal, showToast } from "./ui-lib";
-import { func } from "prop-types";
+import { AudioRecorder } from "./audio-recorder";
 
 const Markdown = dynamic(
   async () => memo((await import("./markdown")).Markdown),
@@ -63,10 +63,6 @@ const Markdown = dynamic(
 );
 
 const Emoji = dynamic(async () => (await import("emoji-picker-react")).Emoji, {
-  loading: () => <LoadingIcon />,
-});
-
-const ReactMic = dynamic(async () => (await import("react-mic")).ReactMic, {
   loading: () => <LoadingIcon />,
 });
 
@@ -384,6 +380,9 @@ export function ChatActions(props: {
   function handleStopRecording() {
     setIsRecording(false);
   }
+  function showErrorToast(message: string) {
+    showToast(message);
+  }
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
@@ -426,12 +425,11 @@ export function ChatActions(props: {
       </div>
 
       <div className={`${chatStyle["chat-input-action"]} clickable`}>
-        <ReactMic
-          className={`${chatStyle["chat-input-action-tip"]} ${
-            isRecording ? "visible" : "invisible"
-          }`}
-          record={isRecording}
-          onStop={({ blob }) => props.inputFromAudio(blob)}
+        <AudioRecorder
+          className={`${chatStyle["chat-input-action-tip"]}`}
+          onAudioRecorded={props.inputFromAudio}
+          onErrorOccurred={showErrorToast}
+          isRecording={isRecording}
         />
         <div
           onMouseDown={handleStartRecording}
