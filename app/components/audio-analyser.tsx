@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AudioVisualiser } from "./audio-visualiser";
 
 export function AudioAnalyser(props: {
@@ -8,9 +8,8 @@ export function AudioAnalyser(props: {
   const [audioData, setAudioData] = useState(new Uint8Array(0));
   const rafIdRef = useRef(0);
 
-  const audioContext = useMemo(() => new window.AudioContext(), []);
-
   useEffect(() => {
+    const audioContext = new window.AudioContext();
     const analyser = audioContext.createAnalyser();
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
@@ -31,7 +30,7 @@ export function AudioAnalyser(props: {
       source.disconnect();
       audioContext.close();
     };
-  }, [props.audioStream, audioContext]);
+  }, [props.audioStream]);
 
   return (
     <AudioVisualiser
