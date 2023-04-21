@@ -375,10 +375,18 @@ export function ChatActions(props: {
   // record audio input
   const [isRecording, setIsRecording] = useState(false);
   function handleStartRecording() {
-    setIsRecording(true);
+    if (!isRecording) {
+      setIsRecording(true);
+    }
   }
   function handleStopRecording() {
-    setIsRecording(false);
+    if (isRecording) {
+      setIsRecording(false);
+    }
+  }
+  function switchRecording() {
+    if (isRecording) handleStopRecording();
+    else handleStartRecording();
   }
   function showErrorToast(message: string) {
     showToast(message);
@@ -432,13 +440,14 @@ export function ChatActions(props: {
           isRecording={isRecording}
         />
         <div
-          onMouseDown={handleStartRecording}
-          onMouseUp={handleStopRecording}
-          onTouchStart={handleStartRecording}
-          onTouchEnd={handleStopRecording}
-          onContextMenu={(e) => {
-            e.preventDefault();
-          }}
+          onClick={switchRecording}
+          // onMouseDown={handleStartRecording}
+          // onMouseUp={handleStopRecording}
+          // onTouchStart={handleStartRecording}
+          // onTouchEnd={handleStopRecording}
+          // onContextMenu={(e) => {
+          //   e.preventDefault();
+          // }}
         >
           <RecordIcon />
         </div>

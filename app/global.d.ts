@@ -9,3 +9,8 @@ declare module "*.scss" {
 }
 
 declare module "*.svg";
+
+declare module "audio-recorder-polyfill/mpeg-encoder" {
+  const mpegEncoder: () => void;
+  export default mpegEncoder;
+}

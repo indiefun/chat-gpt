@@ -75,7 +75,7 @@ export async function requestChat(messages: Message[]) {
 }
 
 export async function requestAudioTranscriptions(blob: Blob) {
-  const file = new File([blob], "audio.webm", { type: blob.type });
+  const file = new File([blob], "audio.mp3", { type: blob.type });
   const body = new FormData();
   body.set("file", file);
   body.set("model", "whisper-1");
