@@ -61,7 +61,7 @@ export function AudioRecorder(props: {
         setMediaStream(stream);
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
-        let timestamp = 0;
+        let timestamp = Date.now().valueOf();
         const recordedChunks = [] as Blob[];
         mediaRecorder.addEventListener("start", () => {
           timestamp = Date.now().valueOf();
