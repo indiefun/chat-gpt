@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { AudioAnalyser } from "./audio-analyser";
+import styles from "./audio-recorder.module.scss";
 
 async function polyfill() {
   return {
@@ -68,14 +69,19 @@ export function AudioRecorder(props: {
           );
         }
       });
-  }, [props.isRecording, props.onAudioRecorded]);
+  }, [props.isRecording]);
 
   return (
-    mediaStream && (
-      <AudioAnalyser
-        className={`${props.className ?? ""}`}
-        audioStream={mediaStream}
-      />
-    )
+    <div className={`${props.className ?? ""} ${styles["container"]}`}>
+      {!props.isRecording && (
+        <div className={`${styles["prompt"]}`}>长按录音</div>
+      )}
+      {mediaStream && (
+        <AudioAnalyser
+          className={`${styles["analyser"]}`}
+          audioStream={mediaStream}
+        />
+      )}
+    </div>
   );
 }

@@ -355,6 +355,7 @@ export function ChatActions(props: {
   scrollToBottom: () => void;
   inputFromAudio: (audio: Blob) => void;
   hitBottom: boolean;
+  inTranscription: boolean;
 }) {
   const chatStore = useChatStore();
 
@@ -383,10 +384,6 @@ export function ChatActions(props: {
     if (isRecording) {
       setIsRecording(false);
     }
-  }
-  function switchRecording() {
-    if (isRecording) handleStopRecording();
-    else handleStartRecording();
   }
   function showErrorToast(message: string) {
     showToast(message);
@@ -432,25 +429,28 @@ export function ChatActions(props: {
         ) : null}
       </div>
 
-      <div className={`${chatStyle["chat-input-action"]} clickable`}>
-        <AudioRecorder
-          className={`${chatStyle["chat-input-action-tip"]}`}
-          onAudioRecorded={props.inputFromAudio}
-          onErrorOccurred={showErrorToast}
-          isRecording={isRecording}
-        />
-        <div
-          onClick={switchRecording}
-          // onMouseDown={handleStartRecording}
-          // onMouseUp={handleStopRecording}
-          // onTouchStart={handleStartRecording}
-          // onTouchEnd={handleStopRecording}
-          // onContextMenu={(e) => {
-          //   e.preventDefault();
-          // }}
-        >
-          <RecordIcon />
-        </div>
+      <div
+        className={`${chatStyle["chat-input-action"]} clickable`}
+        onMouseDown={handleStartRecording}
+        onMouseUp={handleStopRecording}
+        onTouchStart={handleStartRecording}
+        onTouchEnd={handleStopRecording}
+        onContextMenu={(e) => {
+          e.preventDefault();
+        }}
+      >
+        {props.inTranscription ? (
+          <LoadingIcon
+            className={`${chatStyle["chat-input-action-transcription"]}`}
+          />
+        ) : (
+          <AudioRecorder
+            onAudioRecorded={props.inputFromAudio}
+            onErrorOccurred={showErrorToast}
+            isRecording={isRecording}
+          />
+        )}
+        <RecordIcon />
       </div>
     </div>
   );
@@ -683,12 +683,15 @@ export function Chat(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Audio
+  const [inTransition, setInTransition] = useState(false);
   const inputFromAudio = (blob: Blob) => {
+    setInTransition(true);
     chatStore
       .onAudioInput(blob)
       .then((text) => setUserInput(`${userInput}${text}`))
       .catch((error) => showToast(error))
-      .finally(() => setIsLoading(false));
+      .finally(() => setInTransition(false));
   };
 
   return (
@@ -858,6 +861,7 @@ export function Chat(props: {
           scrollToBottom={scrollToBottom}
           inputFromAudio={inputFromAudio}
           hitBottom={hitBottom}
+          inTranscription={inTransition}
         />
         <div className={styles["chat-input-panel-inner"]}>
           <textarea
