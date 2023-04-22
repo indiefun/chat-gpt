@@ -381,7 +381,8 @@ export const useChatStore = create<ChatStore>()(
 
       async onAudioInput(blob: Blob) {
         const res = await requestAudioTranscriptions(blob);
-        if (res) return res.text;
+        if (res.error) throw new Error(res.error.message);
+        if (res.text) return res.text;
         throw new Error("Failed to transcribe audio");
       },
 

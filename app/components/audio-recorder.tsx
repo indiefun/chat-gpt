@@ -9,66 +9,89 @@ async function polyfill() {
   };
 }
 
+function doNothing() {}
+
 export function AudioRecorder(props: {
   isRecording: boolean;
-  onAudioRecorded: (blob: Blob) => void;
+  onAudioRecorded: (blob: Blob, duration: number) => void;
   onErrorOccurred?: (message: string) => void;
   className?: string;
 }) {
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const onErrorOccurred = props.onErrorOccurred ?? doNothing;
 
-  useEffect(() => {
+  function awaitPolyfill(doWithPolyfill: (MediaRecorder: any) => void) {
     polyfill()
       .then(({ MediaRecorder, mpegEncoder }) => {
         MediaRecorder.encoder = mpegEncoder;
         MediaRecorder.prototype.mimeType = "audio/mpeg";
-        if (props.isRecording) {
-          navigator.mediaDevices
-            .getUserMedia({ audio: true })
-            .then((stream) => {
-              setMediaStream(stream);
-
-              const mediaRecorder = new MediaRecorder(stream);
-              mediaRecorderRef.current = mediaRecorder;
-
-              const recordedChunks = [] as Blob[];
-              mediaRecorder.addEventListener("dataavailable", (event: any) => {
-                if (event.data.size > 0) {
-                  recordedChunks.push(event.data);
-                }
-              });
-              mediaRecorder.addEventListener("stop", () => {
-                const blob = new Blob(recordedChunks, {
-                  type: mediaRecorder.mimeType,
-                });
-                props.onAudioRecorded(blob);
-              });
-              mediaRecorder.start();
-            })
-            .catch(() => {
-              if (props.onErrorOccurred) {
-                props.onErrorOccurred("无法获取麦克风使用权限");
-              }
-            });
-        } else {
-          if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            mediaRecorderRef.current = null;
-          }
-          if (mediaStream) {
-            setMediaStream(null);
-            mediaStream.getAudioTracks().forEach((track) => track.stop());
-          }
-        }
+        doWithPolyfill(MediaRecorder);
       })
-      .catch(() => {
-        if (props.onErrorOccurred) {
-          props.onErrorOccurred(
-            "该浏览器不支持MediaRecorder API，建议使用Chrome、Edge、Safari、Firefox等浏览器",
-          );
-        }
+      .catch((error) =>
+        onErrorOccurred(
+          "该浏览器不支持，建议使用Chrome、Edge、Safari、Firefox等浏览器",
+        ),
+      );
+  }
+
+  function awaitAudioStream(
+    doWithAudioStream: (MediaStream: MediaStream) => void,
+  ) {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        doWithAudioStream(stream);
+      })
+      .catch(() => onErrorOccurred("无法获取麦克风使用权限"));
+  }
+
+  function startRecording() {
+    awaitPolyfill((MediaRecorder) => {
+      awaitAudioStream((stream) => {
+        setMediaStream(stream);
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        const timestamp = Date.now().valueOf();
+        const recordedChunks = [] as Blob[];
+        mediaRecorder.addEventListener("start", () => {
+          console.log("recording start");
+        });
+        mediaRecorder.addEventListener("dataavailable", (event: any) => {
+          if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        });
+        mediaRecorder.addEventListener("stop", () => {
+          const blob = new Blob(recordedChunks, {
+            type: mediaRecorder.mimeType,
+          });
+          const duration = Date.now().valueOf() - timestamp;
+          props.onAudioRecorded(blob, duration);
+          console.log("recording stop", blob, duration);
+        });
+        mediaRecorder.start();
       });
+    });
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+    if (mediaStream) {
+      mediaStream.getAudioTracks().forEach((track) => track.stop());
+      setMediaStream(null);
+    }
+  }
+
+  useEffect(() => {
+    if (props.isRecording) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
   }, [props.isRecording]);
 
   return (

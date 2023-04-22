@@ -87,7 +87,7 @@ export async function requestAudioTranscriptions(blob: Blob) {
     },
     body: body,
   });
-  return (await res.json()) as { text: string };
+  return (await res.json()) as { error?: { message: string }; text?: string };
 }
 
 export async function requestUsage() {

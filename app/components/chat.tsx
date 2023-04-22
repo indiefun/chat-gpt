@@ -385,6 +385,16 @@ export function ChatActions(props: {
       setIsRecording(false);
     }
   }
+  function handleInputFromAudio(blob: Blob, duration: number) {
+    const minDuration = 1000;
+    if (duration < minDuration) {
+      showErrorToast(
+        `录音太短，最短${(minDuration / 1000).toFixed(1)}秒，请重试`,
+      );
+    } else {
+      props.inputFromAudio(blob);
+    }
+  }
   function showErrorToast(message: string) {
     showToast(message);
   }
@@ -445,7 +455,7 @@ export function ChatActions(props: {
           />
         ) : (
           <AudioRecorder
-            onAudioRecorded={props.inputFromAudio}
+            onAudioRecorded={handleInputFromAudio}
             onErrorOccurred={showErrorToast}
             isRecording={isRecording}
           />
@@ -690,7 +700,7 @@ export function Chat(props: {
     chatStore
       .onAudioInput(blob)
       .then((text) => setUserInput(`${userInput}${text}`))
-      .catch((error) => showToast(error))
+      .catch((error) => showToast(error.message))
       .finally(() => setInTransition(false));
   };
 
