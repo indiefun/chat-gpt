@@ -353,7 +353,7 @@ function useScrollToBottom() {
 export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
-  inputFromAudio: (audio: Blob) => void;
+  inputFromAudio: (audio: Blob, duration: number) => void;
   hitBottom: boolean;
   inTranscription: boolean;
 }) {
@@ -372,32 +372,6 @@ export function ChatActions(props: {
   // stop all responses
   const couldStop = ControllerPool.hasPending();
   const stopAll = () => ControllerPool.stopAll();
-
-  // record audio input
-  const [isRecording, setIsRecording] = useState(false);
-  function handleStartRecording() {
-    if (!isRecording) {
-      setIsRecording(true);
-    }
-  }
-  function handleStopRecording() {
-    if (isRecording) {
-      setIsRecording(false);
-    }
-  }
-  function handleInputFromAudio(blob: Blob, duration: number) {
-    const minDuration = 1000;
-    if (duration < minDuration) {
-      showErrorToast(
-        `录音太短，最短${(minDuration / 1000).toFixed(1)}秒，请重试`,
-      );
-    } else {
-      props.inputFromAudio(blob);
-    }
-  }
-  function showErrorToast(message: string) {
-    showToast(message);
-  }
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
@@ -439,29 +413,12 @@ export function ChatActions(props: {
         ) : null}
       </div>
 
-      <div
+      <AudioRecorder
         className={`${chatStyle["chat-input-action"]} clickable`}
-        onMouseDown={handleStartRecording}
-        onMouseUp={handleStopRecording}
-        onTouchStart={handleStartRecording}
-        onTouchEnd={handleStopRecording}
-        onContextMenu={(e) => {
-          e.preventDefault();
-        }}
-      >
-        {props.inTranscription ? (
-          <LoadingIcon
-            className={`${chatStyle["chat-input-action-transcription"]}`}
-          />
-        ) : (
-          <AudioRecorder
-            onAudioRecorded={handleInputFromAudio}
-            onErrorOccurred={showErrorToast}
-            isRecording={isRecording}
-          />
-        )}
-        <RecordIcon />
-      </div>
+        onAudioRecorded={props.inputFromAudio}
+        onErrorOccurred={showToast}
+        inTranscription={props.inTranscription}
+      />
     </div>
   );
 }
@@ -703,6 +660,15 @@ export function Chat(props: {
       .catch((error) => showToast(error.message))
       .finally(() => setInTransition(false));
   };
+  const tryInputFromAudio = (blob: Blob, duration: number) => {
+    const minDuration = 1000;
+    if (duration < minDuration) {
+      const minDurationString = (minDuration / 1000).toFixed(1);
+      showToast(`录音太短，最短${minDurationString}秒，请重试`);
+    } else {
+      inputFromAudio(blob);
+    }
+  };
 
   return (
     <div className={styles.chat} key={session.id}>
@@ -869,7 +835,7 @@ export function Chat(props: {
         <ChatActions
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
-          inputFromAudio={inputFromAudio}
+          inputFromAudio={tryInputFromAudio}
           hitBottom={hitBottom}
           inTranscription={inTransition}
         />

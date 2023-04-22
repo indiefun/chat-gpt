@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { AudioAnalyser } from "./audio-analyser";
 import styles from "./audio-recorder.module.scss";
+
+import LoadingIcon from "../icons/three-dots.svg";
+import RecordIcon from "../icons/record.svg";
 
 async function polyfill() {
   return {
@@ -12,11 +15,12 @@ async function polyfill() {
 function doNothing() {}
 
 export function AudioRecorder(props: {
-  isRecording: boolean;
   onAudioRecorded: (blob: Blob, duration: number) => void;
   onErrorOccurred?: (message: string) => void;
+  inTranscription?: boolean;
   className?: string;
 }) {
+  const [isGranted, setIsGranted] = useState(false);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const onErrorOccurred = props.onErrorOccurred ?? doNothing;
@@ -35,15 +39,20 @@ export function AudioRecorder(props: {
       );
   }
 
-  function awaitAudioStream(
-    doWithAudioStream: (MediaStream: MediaStream) => void,
-  ) {
+  function awaitAudioStream(doWithStream: (MediaStream: MediaStream) => void) {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
-        doWithAudioStream(stream);
+        doWithStream(stream);
       })
       .catch(() => onErrorOccurred("无法获取麦克风使用权限"));
+  }
+
+  function grantPermission() {
+    awaitAudioStream((stream) => {
+      stream.getAudioTracks().forEach((track) => track.stop());
+      setIsGranted(true);
+    });
   }
 
   function startRecording() {
@@ -52,10 +61,10 @@ export function AudioRecorder(props: {
         setMediaStream(stream);
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
-        const timestamp = Date.now().valueOf();
+        let timestamp = 0;
         const recordedChunks = [] as Blob[];
         mediaRecorder.addEventListener("start", () => {
-          console.log("recording start");
+          timestamp = Date.now().valueOf();
         });
         mediaRecorder.addEventListener("dataavailable", (event: any) => {
           if (event.data.size > 0) {
@@ -68,7 +77,6 @@ export function AudioRecorder(props: {
           });
           const duration = Date.now().valueOf() - timestamp;
           props.onAudioRecorded(blob, duration);
-          console.log("recording stop", blob, duration);
         });
         mediaRecorder.start();
       });
@@ -86,25 +94,52 @@ export function AudioRecorder(props: {
     }
   }
 
-  useEffect(() => {
-    if (props.isRecording) {
+  function tryStartRecording(e: any) {
+    if (isGranted) {
       startRecording();
     } else {
+      grantPermission();
+    }
+  }
+
+  function tryStopRecording(e: any) {
+    if (isGranted) {
       stopRecording();
     }
-  }, [props.isRecording]);
+  }
+
+  function tryPreventContext(e: any) {
+    e.preventDefault();
+  }
+
+  const showTranscription = props.inTranscription;
+  const showGrantPrompt = !showTranscription && !isGranted;
+  const showActionPrompt = !showTranscription && isGranted && !mediaStream;
+  const showAudioAnalysis = !showTranscription && isGranted && mediaStream;
 
   return (
-    <div className={`${props.className ?? ""} ${styles["container"]}`}>
-      {!props.isRecording && (
+    <div
+      className={`${props.className ?? ""} ${styles["container"]}`}
+      onMouseDown={tryStartRecording}
+      onMouseUp={tryStopRecording}
+      onTouchStart={tryStartRecording}
+      onTouchEnd={tryStopRecording}
+      onContextMenu={tryPreventContext}
+    >
+      {showGrantPrompt && <div className={`${styles["prompt"]}`}>点击授权</div>}
+      {showActionPrompt && (
         <div className={`${styles["prompt"]}`}>长按录音</div>
       )}
-      {mediaStream && (
+      {showTranscription && (
+        <LoadingIcon className={`${styles["transcription"]}`} />
+      )}
+      {showAudioAnalysis && (
         <AudioAnalyser
           className={`${styles["analyser"]}`}
           audioStream={mediaStream}
         />
       )}
+      <RecordIcon />
     </div>
   );
 }
