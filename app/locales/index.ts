@@ -21,6 +21,17 @@ export const AllLangs = [
 ] as const;
 type Lang = (typeof AllLangs)[number];
 
+const ISO6391 = {
+  en: "en",
+  cn: "zh",
+  tw: "zh",
+  es: "es",
+  it: "it",
+  tr: "tr",
+  jp: "ja",
+  de: "de",
+};
+
 const LANG_KEY = "lang";
 
 function getItem(key: string) {
@@ -61,6 +72,12 @@ export function getLang(): Lang {
   }
 
   return "en";
+}
+
+export function getIso6391(): string {
+  const lang = getLang();
+  const iso = ISO6391[lang];
+  return iso ?? "en";
 }
 
 export function changeLang(lang: Lang) {

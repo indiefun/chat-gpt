@@ -1,6 +1,7 @@
 import type { ChatRequest, ChatResponse } from "./api/openai/typing";
 import { Message, ModelConfig, useAccessStore, useChatStore } from "./store";
 import { showToast } from "./components/ui-lib";
+import { getIso6391 } from "./locales";
 
 const TIME_OUT_MS = 60000;
 
@@ -79,6 +80,7 @@ export async function requestAudioTranscriptions(blob: Blob) {
   const body = new FormData();
   body.set("file", file);
   body.set("model", "whisper-1");
+  body.set("language", getIso6391());
   const res = await fetch("/api/openai?_vercel_no_cache=1", {
     method: "POST",
     headers: {
