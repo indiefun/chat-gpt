@@ -2,12 +2,12 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 
 const RAW_FILE_URL = "https://raw.githubusercontent.com/";
-const MIRRORF_FILE_URL = "https://raw.fgit.ml/";
+const MIRROR_FILE_URL = "https://raw.fgit.ml/";
 
 const RAW_CN_URL = "PlexPt/awesome-chatgpt-prompts-zh/main/prompts-zh.json";
-const CN_URL = MIRRORF_FILE_URL + RAW_CN_URL;
+const CN_URL = MIRROR_FILE_URL + RAW_CN_URL;
 const RAW_EN_URL = "f/awesome-chatgpt-prompts/main/prompts.csv";
-const EN_URL = MIRRORF_FILE_URL + RAW_EN_URL;
+const EN_URL = MIRROR_FILE_URL + RAW_EN_URL;
 const FILE = "./public/prompts.json";
 
 async function fetchCN() {
@@ -30,7 +30,7 @@ async function fetchEN() {
       .slice(1)
       .map((v) => v.split('","').map((v) => v.replace('"', "")));
   } catch (error) {
-    console.error("[Fetch] failed to fetch cn prompts", error);
+    console.error("[Fetch] failed to fetch en prompts", error);
     return [];
   }
 }
