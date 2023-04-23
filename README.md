@@ -134,11 +134,15 @@ After adding or modifying this environment variable, please redeploy the project
 
 Your openai api key.
 
+### `OPENAI_API_KEY` (required)
+
+Your openai api key.
+
 ### `CODE` (optional)
 
 Access passsword, separated by comma.
 
-### `BASE_URL` (optional)
+### `OPENAI_URL` (optional)
 
 > Default: `https://api.openai.com`
 

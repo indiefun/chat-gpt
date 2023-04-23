@@ -4,6 +4,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       OPENAI_API_KEY?: string;
+      HUGGING_FACE_TOKEN?: string;
       CODE?: string;
       PROXY_URL?: string;
       VERCEL?: string;
@@ -32,8 +33,8 @@ export const getServerSideConfig = () => {
   }
 
   return {
-    apiKey: process.env.OPENAI_API_KEY,
-    code: process.env.CODE,
+    openAiKey: process.env.OPENAI_API_KEY,
+    huggingFaceToken: process.env.HUGGING_FACE_TOKEN,
     codes: ACCESS_CODES,
     needCode: ACCESS_CODES.size > 0,
     proxyUrl: process.env.PROXY_URL,

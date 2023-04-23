@@ -84,7 +84,7 @@ OpanAI 密钥，你在 openai 账户页面申请的 api key。
 
 **警告**：如果不填写此项，则任何人都可以直接使用你部署后的网站，可能会导致你的 token 被急速消耗完毕，建议填写此选项。
 
-### `BASE_URL` （可选）
+### `OPENAI_URL` （可选）
 
 > Default: `https://api.openai.com`
 
@@ -92,7 +92,7 @@ OpanAI 密钥，你在 openai 账户页面申请的 api key。
 
 OpenAI 接口代理 URL，如果你手动配置了 openai 接口代理，请填写此选项。
 
-> 如果遇到 ssl 证书问题，请将 `BASE_URL` 的协议设置为 http。
+> 如果遇到 ssl 证书问题，请将 `OPENAI_URL` 的协议设置为 http。
 
 ## 开发
 
