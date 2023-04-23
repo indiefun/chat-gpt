@@ -78,6 +78,10 @@ code1,code2,code3
 
 OpanAI 密钥，你在 openai 账户页面申请的 api key。
 
+### `HUGGING_FACE_TOKEN` (必填项)
+
+你的 hugging face token。
+
 ### `CODE` （可选）
 
 访问密码，可选，可以使用逗号隔开多个密码。
@@ -93,6 +97,14 @@ OpanAI 密钥，你在 openai 账户页面申请的 api key。
 OpenAI 接口代理 URL，如果你手动配置了 openai 接口代理，请填写此选项。
 
 > 如果遇到 ssl 证书问题，请将 `OPENAI_URL` 的协议设置为 http。
+
+### `HUGGING_FACE_URL` (可选)
+
+> Default: `https://api-inference.huggingface.co`
+
+> Examples: `http://your-hugging-face-proxy.com`
+
+HuggingFace 接口代理 URL，如果你手动配置了接口代理，请填写此选项。
 
 ## 开发
 

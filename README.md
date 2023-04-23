@@ -134,9 +134,9 @@ After adding or modifying this environment variable, please redeploy the project
 
 Your openai api key.
 
-### `OPENAI_API_KEY` (required)
+### `HUGGING_FACE_TOKEN` (required)
 
-Your openai api key.
+Your hugging face token.
 
 ### `CODE` (optional)
 
@@ -149,6 +149,14 @@ Access passsword, separated by comma.
 > Examples: `http://your-openai-proxy.com`
 
 Override openai api request base url.
+
+### `HUGGING_FACE_URL` (optional)
+
+> Default: `https://api-inference.huggingface.co`
+
+> Examples: `http://your-hugging-face-proxy.com`
+
+Override hugging face api request base url.
 
 ## Development
 

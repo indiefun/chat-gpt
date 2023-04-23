@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 const OPENAI_URL = process.env.OPENAI_URL ?? "https://api.openai.com";
 const HUGGING_FACE_URL =
-  process.env.HUGGING_FACE_URL ?? "https://api-inference.huggingface.co/";
+  process.env.HUGGING_FACE_URL ?? "https://api-inference.huggingface.co";
 
 async function request(
   req: NextRequest,
