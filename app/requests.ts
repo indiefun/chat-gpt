@@ -12,10 +12,12 @@ const makeRequestParam = (
     stream?: boolean;
   },
 ): ChatRequest => {
-  let sendMessages = messages.map((v) => ({
-    role: v.role,
-    content: v.content,
-  }));
+  let sendMessages = messages
+    .filter((m) => !m.diffusion)
+    .map((v) => ({
+      role: v.role,
+      content: v.content,
+    }));
 
   if (options?.filterBot) {
     sendMessages = sendMessages.filter((m) => m.role !== "assistant");
@@ -140,6 +142,59 @@ export async function requestUsage() {
     used: response.total_usage,
     subscription: total.hard_limit_usd,
   };
+}
+
+export async function requestStableDiffusion(
+  messages: Message[],
+  options?: {
+    modelConfig?: ModelConfig;
+    onMessage: (message: string, done: boolean) => void;
+    onError: (error: Error, statusCode?: number) => void;
+    onController?: (controller: AbortController) => void;
+  },
+) {
+  const prompt = messages[messages.length - 1].content.slice(1);
+  const req = {
+    inputs: prompt,
+  };
+
+  console.log("[Request] ", req);
+
+  const controller = new AbortController();
+  const reqTimeoutId = setTimeout(() => controller.abort(), TIME_OUT_MS);
+
+  try {
+    const res = await fetch("/api/hugging-face", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        path: "models/runwayml/stable-diffusion-v1-5",
+        ...getHeaders(),
+      },
+      body: JSON.stringify(req),
+      signal: controller.signal,
+    });
+    clearTimeout(reqTimeoutId);
+
+    if (res.ok) {
+      options?.onController?.(controller);
+
+      const imageBlob = await res.blob();
+      const imageUrl = URL.createObjectURL(imageBlob);
+
+      options?.onMessage(`![${prompt}](${imageUrl})`, true);
+      controller.abort();
+    } else if (res.status === 401) {
+      console.error("Unauthorized");
+      options?.onError(new Error("Unauthorized"), res.status);
+    } else {
+      console.error("Stream Error", res.body);
+      options?.onError(new Error("Stream Error"), res.status);
+    }
+  } catch (err) {
+    console.error("NetWork Error", err);
+    options?.onError(err as Error);
+  }
 }
 
 export async function requestChatStream(

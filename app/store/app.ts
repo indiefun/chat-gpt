@@ -6,6 +6,7 @@ import {
   ControllerPool,
   requestAudioTranscriptions,
   requestChatStream,
+  requestStableDiffusion,
   requestWithPrompt,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
@@ -18,6 +19,7 @@ export type Message = ChatCompletionResponseMessage & {
   streaming?: boolean;
   isError?: boolean;
   id?: number;
+  diffusion?: boolean;
 };
 
 export function createMessage(override: Partial<Message>): Message {
@@ -26,6 +28,7 @@ export function createMessage(override: Partial<Message>): Message {
     date: new Date().toLocaleString(),
     role: "user",
     content: "",
+    diffusion: false,
     ...override,
   };
 }
@@ -211,6 +214,8 @@ interface ChatStore {
   deleteSession: (index?: number) => void;
   currentSession: () => ChatSession;
   onNewMessage: (message: Message) => void;
+  requestAssistant: (content: string) => Promise<void>;
+  requestDiffusion: (content: string) => Promise<void>;
   onUserInput: (content: string) => Promise<void>;
   onAudioInput: (blob: Blob) => Promise<string>;
   summarizeSession: () => void;
@@ -386,7 +391,75 @@ export const useChatStore = create<ChatStore>()(
         throw new Error("Failed to transcribe audio");
       },
 
-      async onUserInput(content) {
+      async requestDiffusion(content: string) {
+        const userMessage: Message = createMessage({
+          role: "user",
+          diffusion: true,
+          content,
+        });
+
+        const botMessage: Message = createMessage({
+          role: "assistant",
+          diffusion: true,
+          streaming: true,
+          id: userMessage.id! + 1,
+        });
+
+        // get current messages
+        const recentMessages = get().getMessagesWithMemory();
+        const sendMessages = recentMessages.concat(userMessage);
+        const sessionIndex = get().currentSessionIndex;
+        const messageIndex = get().currentSession().messages.length + 1;
+
+        // save user's and bot's message
+        get().updateCurrentSession((session) => {
+          session.messages.push(userMessage);
+          session.messages.push(botMessage);
+        });
+
+        // make request
+        console.log("[User Input] ", sendMessages);
+        requestStableDiffusion(sendMessages, {
+          onMessage(content, done) {
+            // stream response
+            if (done) {
+              botMessage.streaming = false;
+              botMessage.content = content;
+              get().onNewMessage(botMessage);
+              ControllerPool.remove(
+                sessionIndex,
+                botMessage.id ?? messageIndex,
+              );
+            } else {
+              botMessage.content = content;
+              set(() => ({}));
+            }
+          },
+          onError(error, statusCode) {
+            if (statusCode === 401) {
+              botMessage.content = Locale.Error.Unauthorized;
+            } else if (!error.message.includes("aborted")) {
+              botMessage.content += "\n\n" + Locale.Store.Error;
+            }
+            botMessage.streaming = false;
+            userMessage.isError = true;
+            botMessage.isError = true;
+            set(() => ({}));
+            ControllerPool.remove(sessionIndex, botMessage.id ?? messageIndex);
+          },
+          onController(controller: AbortController) {
+            // collect controller for stop/retry
+            ControllerPool.addController(
+              sessionIndex,
+              botMessage.id ?? messageIndex,
+              controller,
+            );
+          },
+          modelConfig: get().config.modelConfig,
+        });
+      },
+
+      async requestAssistant(content: string) {
         const userMessage: Message = createMessage({
           role: "user",
           content,
@@ -451,6 +524,14 @@ export const useChatStore = create<ChatStore>()(
           filterBot: !get().config.sendBotMessages,
           modelConfig: get().config.modelConfig,
         });
+      },
+
+      async onUserInput(content) {
+        if (content.startsWith("#")) {
+          get().requestDiffusion(content);
+        } else {
+          get().requestAssistant(content);
+        }
       },
 
       getMemoryPrompt() {
