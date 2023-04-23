@@ -112,11 +112,6 @@ export function AudioRecorder(props: {
     e.preventDefault();
   }
 
-  const showTranscription = props.inTranscription;
-  const showGrantPrompt = !showTranscription && !isGranted;
-  const showActionPrompt = !showTranscription && isGranted && !mediaStream;
-  const showAudioAnalysis = !showTranscription && isGranted && mediaStream;
-
   return (
     <div
       className={`${props.className ?? ""} ${styles["container"]}`}
@@ -126,14 +121,13 @@ export function AudioRecorder(props: {
       onTouchEnd={tryStopRecording}
       onContextMenu={tryPreventContext}
     >
-      {showGrantPrompt && <div className={`${styles["prompt"]}`}>点击授权</div>}
-      {showActionPrompt && (
-        <div className={`${styles["prompt"]}`}>长按录音</div>
-      )}
-      {showTranscription && (
+      {props.inTranscription ? (
         <LoadingIcon className={`${styles["transcription"]}`} />
-      )}
-      {showAudioAnalysis && (
+      ) : !isGranted ? (
+        <div className={`${styles["prompt"]}`}>点击授权</div>
+      ) : !mediaStream ? (
+        <div className={`${styles["prompt"]}`}>长按录音</div>
+      ) : (
         <AudioAnalyser
           className={`${styles["analyser"]}`}
           audioStream={mediaStream}
