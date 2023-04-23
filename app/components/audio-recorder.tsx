@@ -121,18 +121,18 @@ export function AudioRecorder(props: {
       onTouchEnd={tryStopRecording}
       onContextMenu={tryPreventContext}
     >
-      {props.inTranscription ? (
-        <LoadingIcon className={`${styles["transcription"]}`} />
-      ) : !isGranted ? (
-        <div className={`${styles["prompt"]}`}>点击授权</div>
-      ) : !mediaStream ? (
-        <div className={`${styles["prompt"]}`}>长按录音</div>
-      ) : (
-        <AudioAnalyser
-          className={`${styles["analyser"]}`}
-          audioStream={mediaStream}
-        />
-      )}
+      {
+        /* prettier-ignore */
+        props.inTranscription ?
+          (<LoadingIcon className={`${styles["transcription"]}`} />) :
+          (!isGranted ?
+              (<div className={`${styles["prompt"]}`}>点击授权</div>) :
+              (!mediaStream ?
+                  (<div className={`${styles["prompt"]}`}>长按录音</div>) :
+                  (<AudioAnalyser className={`${styles["analyser"]}`} audioStream={mediaStream}/>)
+              )
+          )
+      }
       <RecordIcon />
     </div>
   );
