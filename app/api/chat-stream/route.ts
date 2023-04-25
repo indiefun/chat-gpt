@@ -60,6 +60,6 @@ export async function POST(req: NextRequest) {
 }
 
 export const config = {
-  runtime: "edge",
+  runtime: "experimental-edge",
   regions: ["iad1", "cle1", "pdx1", "sfo1", "sin1", "lhr1", "cdg1", "arn1"],
 };
