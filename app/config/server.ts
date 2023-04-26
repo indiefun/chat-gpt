@@ -3,11 +3,16 @@ import md5 from "spark-md5";
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      OPENAI_API_KEY?: string;
-      HUGGING_FACE_TOKEN?: string;
       CODE?: string;
       PROXY_URL?: string;
       VERCEL?: string;
+
+      OPENAI_API_KEY?: string;
+      OPENAI_URL?: string;
+      HUGGING_FACE_TOKEN?: string;
+      HUGGING_FACE_URL?: string;
+      DIFFUSION_TOKEN?: string;
+      DIFFUSION_URL?: string;
     }
   }
 }
@@ -33,11 +38,17 @@ export const getServerSideConfig = () => {
   }
 
   return {
-    openAiKey: process.env.OPENAI_API_KEY,
-    huggingFaceToken: process.env.HUGGING_FACE_TOKEN,
     codes: ACCESS_CODES,
     needCode: ACCESS_CODES.size > 0,
     proxyUrl: process.env.PROXY_URL,
     isVercel: !!process.env.VERCEL,
+
+    openAiKey: process.env.OPENAI_API_KEY,
+    openAiUrl: process.env.OPENAI_URL ?? "https://api.openai.com",
+    huggingFaceToken: process.env.HUGGING_FACE_TOKEN,
+    huggingFaceUrl:
+      process.env.HUGGING_FACE_URL ?? "https://api-inference.huggingface.co",
+    diffusionToken: process.env.DIFFUSION_TOKEN,
+    diffusionUrl: process.env.DIFFUSION_URL ?? "https://diffusion.luming.fun",
   };
 };

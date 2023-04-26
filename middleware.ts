@@ -3,7 +3,7 @@ import { getServerSideConfig } from "./app/config/server";
 import md5 from "spark-md5";
 
 export const config = {
-  matcher: ["/api/openai", "/api/chat-stream", "/api/hugging-face"],
+  matcher: ["/api/openai", "/api/chat-stream", "/api/hugging-face", "/api/diffusion"],
 };
 
 const serverConfig = getServerSideConfig();
@@ -39,27 +39,6 @@ export function middleware(req: NextRequest) {
       {
         status: 401,
       },
-    );
-  }
-
-  const reqUrl = new URL(req.url);
-  console.log("[Middleware] url path: ", reqUrl.pathname);
-
-  const tokenName = reqUrl.pathname.startsWith("/api/hugging-face") ? "hugging-face" : "openai";
-  const tokenKey = reqUrl.pathname.startsWith("/api/hugging-face") ? serverConfig.huggingFaceToken : serverConfig.openAiKey;
-
-  if (tokenKey) {
-    console.log("[Auth] set system token: ", tokenName);
-    req.headers.set("token", tokenKey);
-  } else {
-    return NextResponse.json(
-        {
-          error: true,
-          msg: `Empty Token For: ${tokenName}`,
-        },
-        {
-          status: 401,
-        },
     );
   }
 

@@ -1,24 +1,22 @@
 import { NextRequest } from "next/server";
+import { getServerSideConfig } from "../config/server";
 
-const OPENAI_URL = process.env.OPENAI_URL ?? "https://api.openai.com";
-const HUGGING_FACE_URL =
-  process.env.HUGGING_FACE_URL ?? "https://api-inference.huggingface.co";
+const serverConfig = getServerSideConfig();
 
 async function request(
   req: NextRequest,
   urlBase: string,
   headers?: { [key: string]: string },
 ) {
-  const apiKey = req.headers.get("token");
   const urlPath = req.headers.get("path");
+  const contentType = req.headers.get("Content-Type") ?? "application/json";
 
   console.log("[Request] base: ", urlBase);
   console.log("[Request] path: ", urlPath);
 
   return fetch(`${urlBase}/${urlPath}`, {
     headers: {
-      "Content-Type": req.headers.get("Content-Type") ?? "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": contentType,
       ...headers,
     },
     method: req.method,
@@ -31,7 +29,8 @@ export async function requestOpenai(req: NextRequest) {
   if (orgId) {
     console.log("[Org ID] ", orgId);
   }
-  return request(req, OPENAI_URL, {
+  return request(req, serverConfig.openAiUrl, {
+    Authorization: `Bearer ${serverConfig.openAiKey}`,
     ...(orgId && {
       "OpenAI-Organization": orgId,
     }),
@@ -39,5 +38,13 @@ export async function requestOpenai(req: NextRequest) {
 }
 
 export async function requestHuggingFace(req: NextRequest) {
-  return request(req, HUGGING_FACE_URL);
+  return request(req, serverConfig.huggingFaceUrl, {
+    Authorization: `Bearer ${serverConfig.huggingFaceToken}`,
+  });
+}
+
+export async function requestDiffusion(req: NextRequest) {
+  return request(req, serverConfig.diffusionUrl, {
+    Authorization: `Basic ${serverConfig.huggingFaceToken}`,
+  });
 }

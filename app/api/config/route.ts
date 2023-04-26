@@ -19,3 +19,8 @@ export async function POST(req: NextRequest) {
     needCode: serverConfig.needCode,
   });
 }
+
+export const config = {
+  runtime: "experimental-edge",
+  regions: ["sin1", "iad1", "cle1", "pdx1", "sfo1", "lhr1", "cdg1", "arn1"],
+};

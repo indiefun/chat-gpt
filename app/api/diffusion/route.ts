@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requestOpenai } from "../common";
+import { requestDiffusion } from "../common";
 
 async function makeRequest(req: NextRequest) {
   try {
-    const api = await requestOpenai(req);
+    const api = await requestDiffusion(req);
     const res = new NextResponse(api.body);
-    res.headers.set("Content-Type", "application/json");
     res.headers.set("Cache-Control", "no-cache");
     return res;
   } catch (e) {
-    console.error("[OpenAI] ", req.body, e);
+    console.error("[Diffusion] ", req.body, e);
     return NextResponse.json(
       {
         error: true,
