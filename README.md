@@ -138,6 +138,10 @@ Your openai api key.
 
 Your hugging face token.
 
+### `DIFFUSION_TOKEN` (required)
+
+Your hosted stable diffusion token.
+
 ### `CODE` (optional)
 
 Access passsword, separated by comma.
@@ -157,6 +161,14 @@ Override openai api request base url.
 > Examples: `http://your-hugging-face-proxy.com`
 
 Override hugging face api request base url.
+
+### `DIFFUSION_URL` (optional)
+
+> Default: `https://diffusion.luming.fun`
+
+> Examples: `http://your-hosted-stable-diffusion.com`
+
+Override stable diffusion api request base url.
 
 ### `OPENAI_ORG_ID` (optional)
 
