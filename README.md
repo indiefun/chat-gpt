@@ -138,7 +138,7 @@ Your openai api key.
 
 Your hugging face token.
 
-### `DIFFUSION_TOKEN` (required)
+### `STABLE_DIFFUSION_TOKEN` (required)
 
 Your hosted stable diffusion token.
 
@@ -162,7 +162,7 @@ Override openai api request base url.
 
 Override hugging face api request base url.
 
-### `DIFFUSION_URL` (optional)
+### `STABLE_DIFFUSION_URL` (optional)
 
 > Default: `https://diffusion.luming.fun`
 

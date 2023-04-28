@@ -11,8 +11,8 @@ declare global {
       OPENAI_URL?: string;
       HUGGING_FACE_TOKEN?: string;
       HUGGING_FACE_URL?: string;
-      DIFFUSION_TOKEN?: string;
-      DIFFUSION_URL?: string;
+      STABLE_DIFFUSION_TOKEN?: string;
+      STABLE_DIFFUSION_URL?: string;
     }
   }
 }
@@ -48,7 +48,8 @@ export const getServerSideConfig = () => {
     huggingFaceToken: process.env.HUGGING_FACE_TOKEN,
     huggingFaceUrl:
       process.env.HUGGING_FACE_URL ?? "https://api-inference.huggingface.co",
-    diffusionToken: process.env.DIFFUSION_TOKEN,
-    diffusionUrl: process.env.DIFFUSION_URL ?? "https://diffusion.luming.fun",
+    stableDiffusionToken: process.env.STABLE_DIFFUSION_TOKEN,
+    stableDiffusionUrl:
+      process.env.STABLE_DIFFUSION_URL ?? "https://diffusion.luming.fun",
   };
 };

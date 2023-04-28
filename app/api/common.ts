@@ -44,7 +44,7 @@ export async function requestHuggingFace(req: NextRequest) {
 }
 
 export async function requestDiffusion(req: NextRequest) {
-  return request(req, serverConfig.diffusionUrl, {
-    Authorization: `Basic ${serverConfig.diffusionToken}`,
+  return request(req, serverConfig.stableDiffusionUrl, {
+    Authorization: `Basic ${serverConfig.stableDiffusionToken}`,
   });
 }

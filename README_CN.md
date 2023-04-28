@@ -82,7 +82,7 @@ OpanAI 密钥，你在 openai 账户页面申请的 api key。
 
 你的 hugging face token。
 
-### `DIFFUSION_TOKEN` (必填项)
+### `STABLE_DIFFUSION_TOKEN` (必填项)
 
 你的 hosted stable diffusion token。
 
@@ -110,7 +110,7 @@ OpenAI 接口代理 URL，如果你手动配置了 openai 接口代理，请填�
 
 HuggingFace 接口代理 URL，如果你手动配置了接口代理，请填写此选项。
 
-### `DIFFUSION_URL` (可选)
+### `STABLE_DIFFUSION_URL` (可选)
 
 > Default: `https://diffusion.luming.fun`
 
