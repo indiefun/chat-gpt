@@ -4,23 +4,24 @@ import { persist } from "zustand/middleware";
 import { type ChatCompletionResponseMessage } from "openai";
 import {
   ControllerPool,
-  requestAudioTranscriptions,
+  requestOpenAiAudioTranscriptions,
+  requestHuggingFaceTextToImageModel,
+  requestStableDiffusionTextToImageInterface,
   requestChatStream,
-  requestStableDiffusion,
   requestWithPrompt,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
 
 import Locale from "../locales";
 import { showToast } from "../components/ui-lib";
-import { ModelType, useAppConfig } from "./config";
+import { PaintingOptions, ModelType, useAppConfig } from "./config";
 
 export type Message = ChatCompletionResponseMessage & {
   date: string;
   streaming?: boolean;
   isError?: boolean;
   id?: number;
-  diffusion?: boolean;
+  painting?: PaintingOptions;
   model?: ModelType;
 };
 
@@ -30,7 +31,6 @@ export function createMessage(override: Partial<Message>): Message {
     date: new Date().toLocaleString(),
     role: "user",
     content: "",
-    diffusion: false,
     ...override,
   };
 }
@@ -93,8 +93,8 @@ interface ChatStore {
   currentSession: () => ChatSession;
   onNewMessage: (message: Message) => void;
   requestAssistant: (content: string) => Promise<void>;
-  requestDiffusion: (content: string) => Promise<void>;
-  onUserInput: (content: string) => Promise<void>;
+  requestPainting: (content: string, options: PaintingOptions) => Promise<void>;
+  onUserInput: (content: string, options?: PaintingOptions) => Promise<void>;
   onAudioInput: (blob: Blob) => Promise<string>;
   summarizeSession: () => void;
   updateStat: (message: Message) => void;
@@ -243,24 +243,24 @@ export const useChatStore = create<ChatStore>()(
       },
 
       async onAudioInput(blob: Blob) {
-        const res = await requestAudioTranscriptions(blob);
+        const res = await requestOpenAiAudioTranscriptions(blob);
         if (res.error) throw new Error(res.error.message);
         if (res.text) return res.text;
         throw new Error("Failed to transcribe audio");
       },
 
-      async requestDiffusion(content: string) {
+      async requestPainting(content: string, options: PaintingOptions) {
         const userMessage: Message = createMessage({
           role: "user",
-          diffusion: true,
           content,
+          painting: options,
         });
 
         const botMessage: Message = createMessage({
           role: "assistant",
-          diffusion: true,
           streaming: true,
           id: userMessage.id! + 1,
+          painting: { model: options.model },
           model: useAppConfig.getState().modelConfig.model,
         });
 
@@ -278,7 +278,12 @@ export const useChatStore = create<ChatStore>()(
 
         // make request
         console.log("[User Input] ", sendMessages);
-        requestStableDiffusion(sendMessages, {
+        const diffusionFunction =
+          options.model === "HuggingFace"
+            ? requestHuggingFaceTextToImageModel
+            : requestStableDiffusionTextToImageInterface;
+        diffusionFunction(sendMessages, {
+          diffusion: options,
           onMessage(content, done) {
             // stream response
             if (done) {
@@ -314,7 +319,6 @@ export const useChatStore = create<ChatStore>()(
               controller,
             );
           },
-          modelConfig: useAppConfig.getState().modelConfig,
         });
       },
 
@@ -386,9 +390,9 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
-      async onUserInput(content) {
-        if (content.startsWith("#")) {
-          get().requestDiffusion(content);
+      async onUserInput(content, options?) {
+        if (options) {
+          get().requestPainting(content, options);
         } else {
           get().requestAssistant(content);
         }

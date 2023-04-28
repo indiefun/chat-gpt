@@ -312,10 +312,18 @@ pre {
   }
 }
 
-.visible {
-  display: block;
+.n-m-l, .n-m-h, .n-m {
+  margin-left: 0;
 }
 
-.invisible {
-  display: none;
+.n-m-r, .n-m-h, .n-m {
+  margin-right: 0;
+}
+
+.n-m-t, .n-m-v, .n-m {
+  margin-top: 0;
+}
+
+.n-m-b, .n-m-v, .n-m {
+  margin-bottom: 0;
 }

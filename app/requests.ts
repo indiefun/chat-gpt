@@ -3,6 +3,7 @@ import {
   Message,
   ModelConfig,
   ModelType,
+  DiffusionOptions,
   useAccessStore,
   useAppConfig,
   useChatStore,
@@ -21,7 +22,7 @@ const makeRequestParam = (
   },
 ): ChatRequest => {
   let sendMessages = messages
-    .filter((m) => !m.diffusion)
+    .filter((m) => !m.painting)
     .map((v) => ({
       role: v.role,
       content: v.content,
@@ -98,13 +99,13 @@ export async function requestChat(
   }
 }
 
-export async function requestAudioTranscriptions(blob: Blob) {
+export async function requestOpenAiAudioTranscriptions(blob: Blob) {
   const file = new File([blob], "audio.mp3", { type: blob.type });
   const body = new FormData();
   body.set("file", file);
   body.set("model", "whisper-1");
   body.set("language", getIso6391());
-  const res = await fetch("/api/openai?_vercel_no_cache=1", {
+  const res = await fetch("/api/openai", {
     method: "POST",
     headers: {
       path: "v1/audio/transcriptions",
@@ -165,18 +166,31 @@ export async function requestUsage() {
   };
 }
 
-export async function requestStableDiffusion(
+export async function requestHuggingFaceTextToImageModel(
   messages: Message[],
   options?: {
-    modelConfig?: ModelConfig;
+    diffusion?: DiffusionOptions;
     onMessage: (message: string, done: boolean) => void;
     onError: (error: Error, statusCode?: number) => void;
     onController?: (controller: AbortController) => void;
   },
 ) {
-  const prompt = messages[messages.length - 1].content.slice(1);
+  const prompt = messages[messages.length - 1].content;
+  // TODO: default value
+  const config = options?.diffusion
+    ? {
+        parameters: {
+          negative_prompt: options.diffusion.negative_prompt ?? "",
+          width: options.diffusion.width ?? 512,
+          height: options.diffusion.height ?? 512,
+          num_inference_steps: options.diffusion.steps ?? 20,
+          guidance_scale: options.diffusion.cfg_scale ?? 7.5,
+        },
+      }
+    : {};
   const req = {
     inputs: prompt,
+    ...config,
   };
 
   console.log("[Request] ", req);
@@ -204,6 +218,83 @@ export async function requestStableDiffusion(
       const imageUrl = URL.createObjectURL(imageBlob);
 
       options?.onMessage(`![${prompt}](${imageUrl})`, true);
+      controller.abort();
+    } else if (res.status === 401) {
+      console.error("Unauthorized");
+      options?.onError(new Error("Unauthorized"), res.status);
+    } else {
+      console.error("Stream Error", res.body);
+      options?.onError(new Error("Stream Error"), res.status);
+    }
+  } catch (err) {
+    console.error("NetWork Error", err);
+    options?.onError(err as Error);
+  }
+}
+
+export async function requestStableDiffusionTextToImageInterface(
+  messages: Message[],
+  options?: {
+    diffusion?: DiffusionOptions;
+    onMessage: (message: string, done: boolean) => void;
+    onError: (error: Error, statusCode?: number) => void;
+    onController?: (controller: AbortController) => void;
+  },
+) {
+  const prompt = messages[messages.length - 1].content;
+  const req = {
+    prompt,
+    ...options?.diffusion,
+  };
+
+  console.log("[Request] ", options);
+
+  const controller = new AbortController();
+  const reqTimeoutId = setTimeout(() => controller.abort(), TIME_OUT_MS);
+
+  try {
+    const res = await fetch("/api/diffusion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        path: "sdapi/v1/txt2img",
+        ...getHeaders(),
+      },
+      body: JSON.stringify(req),
+      signal: controller.signal,
+    });
+    clearTimeout(reqTimeoutId);
+
+    if (res.ok) {
+      options?.onController?.(controller);
+
+      const { images, info } = await res.json();
+      const {
+        prompt,
+        negative_prompt,
+        seed,
+        width,
+        height,
+        sampler_name,
+        cfg_scale,
+        steps,
+      } = JSON.parse(info);
+
+      let message =
+        `**${prompt}**  \n` +
+        (negative_prompt ? `~~${negative_prompt}~~  \n` : "  \n") +
+        `*Seed: ${seed}, Steps: ${steps}, Size: ${width}x${height}, CFG scale: ${cfg_scale}, Sampler: ${sampler_name}*  \n`;
+      options?.onMessage(message, false);
+
+      for (let i = 0; i < images.length; ++i) {
+        const blobResponse = await fetch(`data:image/png;base64,${images[i]}`);
+        const imageBlob = await blobResponse.blob();
+        const imageUrl = URL.createObjectURL(imageBlob);
+        message += `![${seed + i}](${imageUrl})  \n`;
+        options?.onMessage(message, false);
+      }
+
+      options?.onMessage(message, true);
       controller.abort();
     } else if (res.status === 401) {
       console.error("Unauthorized");

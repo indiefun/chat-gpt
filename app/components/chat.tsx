@@ -1,5 +1,12 @@
 import { useDebounce, useDebouncedCallback } from "use-debounce";
-import { memo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import {
+  memo,
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -15,12 +22,13 @@ import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
-
 import LightIcon from "../icons/light.svg";
 import DarkIcon from "../icons/dark.svg";
 import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
+import AssistantIcon from "../icons/assistant.svg";
+import DiffusionIcon from "../icons/diffusion.svg";
 
 import {
   Message,
@@ -33,6 +41,7 @@ import {
   Theme,
   ModelType,
   useAppConfig,
+  PaintingOptions,
 } from "../store";
 
 import {
@@ -50,7 +59,7 @@ import { ControllerPool } from "../requests";
 import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
-import { IconButton } from "./button";
+import { IconButton, StateButton } from "./button";
 import styles from "./home.module.scss";
 import chatStyle from "./chat.module.scss";
 
@@ -58,6 +67,7 @@ import { AudioRecorder } from "./audio-recorder";
 import { Input, Modal, showModal, showToast } from "./ui-lib";
 import { useNavigate } from "react-router-dom";
 import { Path } from "../constant";
+import { PaintingSettings } from "./painting-settings";
 
 const Markdown = dynamic(
   async () => memo((await import("./markdown")).Markdown),
@@ -364,6 +374,7 @@ export function ChatActions(props: {
   inputFromAudio: (audio: Blob, duration: number) => void;
   hitBottom: boolean;
   inTranscription: boolean;
+  switchInputMode: (mode: "assistant" | "diffusion") => void;
 }) {
   const config = useAppConfig();
 
@@ -383,6 +394,17 @@ export function ChatActions(props: {
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
+      <StateButton
+        className={`${chatStyle["chat-input-action"]} clickable`}
+        initState={"assistant"}
+        states={["assistant", "diffusion"]}
+        icons={[
+          <AssistantIcon key="assistant" />,
+          <DiffusionIcon key="diffusion" />,
+        ]}
+        texts={["问答", "绘画"]}
+        onChange={props.switchInputMode}
+      />
       {couldStop && (
         <div
           className={`${chatStyle["chat-input-action"]} clickable`}
@@ -492,6 +514,25 @@ export function Chat() {
     },
   );
 
+  // Paint Options
+  const defaultPaintOptions = useMemo(
+    () => ({ model: "HuggingFace" } as PaintingOptions),
+    [],
+  );
+  const lastPaintOptions = useRef(defaultPaintOptions);
+  const [paintOptions, _setPaintOptions] = useState<PaintingOptions>();
+  const setPaintOptions = (paintOptions: PaintingOptions | undefined) => {
+    _setPaintOptions(paintOptions);
+    if (paintOptions) {
+      lastPaintOptions.current = paintOptions;
+    }
+  };
+  const handleSwitchInputMode = (mode: "assistant" | "diffusion") => {
+    setPaintOptions(
+      mode === "diffusion" ? lastPaintOptions.current : undefined,
+    );
+  };
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
 
@@ -517,7 +558,9 @@ export function Chat() {
   const onUserSubmit = () => {
     if (userInput.length <= 0) return;
     setIsLoading(true);
-    chatStore.onUserInput(userInput).then(() => setIsLoading(false));
+    chatStore
+      .onUserInput(userInput, paintOptions)
+      .then(() => setIsLoading(false));
     setBeforeInput(userInput);
     setUserInput("");
     setPromptHints([]);
@@ -591,7 +634,9 @@ export function Chat() {
     setIsLoading(true);
     const content = session.messages[userIndex].content;
     deleteMessage(userIndex);
-    chatStore.onUserInput(content).then(() => setIsLoading(false));
+    chatStore
+      .onUserInput(content, paintOptions)
+      .then(() => setIsLoading(false));
     inputRef.current?.focus();
   };
 
@@ -657,14 +702,14 @@ export function Chat() {
   }, []);
 
   // Audio
-  const [inTransition, setInTransition] = useState(false);
+  const [inTranscription, setInTranscription] = useState(false);
   const inputFromAudio = (blob: Blob) => {
-    setInTransition(true);
+    setInTranscription(true);
     chatStore
       .onAudioInput(blob)
       .then((text) => setUserInput(`${userInput}${text}`))
       .catch((error) => showToast(error.message))
-      .finally(() => setInTransition(false));
+      .finally(() => setInTranscription(false));
   };
   const tryInputFromAudio = (blob: Blob, duration: number) => {
     const minDuration = 1000;
@@ -842,12 +887,20 @@ export function Chat() {
       <div className={styles["chat-input-panel"]}>
         <PromptHints prompts={promptHints} onPromptSelect={onPromptSelect} />
 
+        {paintOptions && (
+          <PaintingSettings
+            options={paintOptions}
+            setOptions={setPaintOptions}
+          />
+        )}
+
         <ChatActions
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
           inputFromAudio={tryInputFromAudio}
           hitBottom={hitBottom}
-          inTranscription={inTransition}
+          inTranscription={inTranscription}
+          switchInputMode={handleSwitchInputMode}
         />
         <div className={styles["chat-input-panel-inner"]}>
           <textarea
