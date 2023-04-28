@@ -3,7 +3,7 @@ import { getServerSideConfig } from "./app/config/server";
 import md5 from "spark-md5";
 
 export const config = {
-  matcher: ["/api/openai", "/api/chat-stream", "/api/hugging-face", "/api/diffusion"],
+  matcher: ["/api/openai", "/api/chat-stream", "/api/hugging-face", "/api/stable-diffusion"],
 };
 
 const serverConfig = getServerSideConfig();

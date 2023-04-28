@@ -253,7 +253,7 @@ export async function requestStableDiffusionTextToImageInterface(
   const reqTimeoutId = setTimeout(() => controller.abort(), TIME_OUT_MS);
 
   try {
-    const res = await fetch("/api/diffusion", {
+    const res = await fetch("/api/stable-diffusion", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
