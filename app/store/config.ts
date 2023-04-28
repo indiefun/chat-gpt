@@ -75,6 +75,8 @@ export const ALL_MODELS = [
   },
 ] as const;
 
+export type ModelType = (typeof ALL_MODELS)[number]["name"];
+
 export type DiffusionOptions = {
   negative_prompt?: string;
   seed?: number;
@@ -84,6 +86,24 @@ export type DiffusionOptions = {
   height?: number; // 256 | 512 | 768 | 1024
   sampler_index?: string; // "Euler a" | "Euler" | "LMS" | "Heun" | "DPM2" | "DPM2 a" | "DPM++ 2S a" | "DPM++ 2M" | "DPM++ SDE" | "DPM fast" | "DPM adaptive" | "LMS Karras" | "DPM2 Karras" | "DPM2 a Karras" | "DPM++ 2S a Karras" | "DPM++ 2M Karras" | "DPM++ SDE Karras" | "DDIM" | "PLMS"
   batch_size?: number; // [1, 8] step: 1
+};
+
+export const DIFFUSION_OPTIONS_DEFAULTS = {
+  negative_prompt: "",
+  seed: -1,
+  steps: 50,
+  cfg_scale: 7.5,
+  width: 512,
+  height: 512,
+  batch_size: 1,
+};
+
+export const DIFFUSION_OPTIONS_RANGES = {
+  steps: { min: 1, max: 150, step: 1 },
+  cfg_scale: { min: 1, max: 30, step: 0.5 },
+  width: { min: 256, max: 1024, step: 256 },
+  height: { min: 256, max: 1024, step: 256 },
+  batch_size: { min: 1, max: 8, step: 1 },
 };
 
 export const PAINTING_MODELS = [
@@ -122,8 +142,6 @@ export type PaintingModel = (typeof PAINTING_MODELS)[number]["name"];
 export type PaintingOptions = DiffusionOptions & {
   model: PaintingModel;
 };
-
-export type ModelType = (typeof ALL_MODELS)[number]["name"];
 
 export function limitNumber(
   x: number,

@@ -1,5 +1,11 @@
 import { useMemo, ReactElement } from "react";
-import { PAINTING_MODELS, PaintingModel, PaintingOptions } from "../store";
+import {
+  DIFFUSION_OPTIONS_DEFAULTS,
+  DIFFUSION_OPTIONS_RANGES,
+  PAINTING_MODELS,
+  PaintingModel,
+  PaintingOptions,
+} from "../store";
 import styles from "./painting-settings.module.scss";
 
 function SettingList(props: {
@@ -72,7 +78,8 @@ export const PaintingSettings = (props: {
     [],
   );
   const defaultSampler = samplerList[0];
-  // TODO: default value
+  const modelDefaults = DIFFUSION_OPTIONS_DEFAULTS;
+  const modelRanges = DIFFUSION_OPTIONS_RANGES;
   return (
     <SettingList title={"Painting Config"}>
       <SettingItem title={"Model"}>
@@ -110,14 +117,14 @@ export const PaintingSettings = (props: {
           ))}
         </select>
       </SettingItem>
-      <SettingItem title={"Width"} value={options.width ?? 512}>
+      <SettingItem title={"Width"} value={options.width ?? modelDefaults.width}>
         <input
           type="range"
-          value={options.width ?? 512}
+          value={options.width ?? modelDefaults.width}
           disabled={!modelFeatures?.width}
-          min={256}
-          max={1024}
-          step={256}
+          min={modelRanges.width.min}
+          max={modelRanges.width.max}
+          step={modelRanges.width.step}
           onChange={(e) =>
             setOptions({
               ...options,
@@ -126,14 +133,17 @@ export const PaintingSettings = (props: {
           }
         />
       </SettingItem>
-      <SettingItem title={"Height"} value={options.height ?? 512}>
+      <SettingItem
+        title={"Height"}
+        value={options.height ?? modelDefaults.height}
+      >
         <input
           type="range"
-          value={options.height ?? 512}
+          value={options.height ?? modelDefaults.height}
           disabled={!modelFeatures?.height}
-          min={256}
-          max={1024}
-          step={256}
+          min={modelRanges.height.min}
+          max={modelRanges.height.max}
+          step={modelRanges.height.step}
           onChange={(e) =>
             setOptions({
               ...options,
@@ -142,14 +152,14 @@ export const PaintingSettings = (props: {
           }
         />
       </SettingItem>
-      <SettingItem title={"Step"} value={options.steps ?? 20}>
+      <SettingItem title={"Step"} value={options.steps ?? modelDefaults.steps}>
         <input
           type="range"
-          value={options.steps ?? 20}
+          value={options.steps ?? modelDefaults.steps}
           disabled={!modelFeatures?.steps}
-          min={1}
-          max={150}
-          step={1}
+          min={modelRanges.steps.min}
+          max={modelRanges.steps.max}
+          step={modelRanges.steps.step}
           onChange={(e) =>
             setOptions({
               ...options,
@@ -160,15 +170,15 @@ export const PaintingSettings = (props: {
       </SettingItem>
       <SettingItem
         title={"Scale"}
-        value={(options.cfg_scale ?? 7.5).toFixed(1)}
+        value={(options.cfg_scale ?? modelDefaults.cfg_scale).toFixed(1)}
       >
         <input
           type="range"
-          value={options.cfg_scale ?? 7.5}
+          value={options.cfg_scale ?? modelDefaults.cfg_scale}
           disabled={!modelFeatures?.cfg_scale}
-          min={1}
-          max={30}
-          step={0.5}
+          min={modelRanges.cfg_scale.min}
+          max={modelRanges.cfg_scale.max}
+          step={modelRanges.cfg_scale.step}
           onChange={(e) =>
             setOptions({
               ...options,
@@ -180,7 +190,7 @@ export const PaintingSettings = (props: {
       <SettingItem title={"Seed"}>
         <input
           type="number"
-          value={options.seed ?? -1}
+          value={options.seed ?? modelDefaults.seed}
           disabled={!modelFeatures?.seed}
           onChange={(e) =>
             setOptions({
@@ -190,14 +200,17 @@ export const PaintingSettings = (props: {
           }
         />
       </SettingItem>
-      <SettingItem title={"Count"} value={options.batch_size ?? 1}>
+      <SettingItem
+        title={"Count"}
+        value={options.batch_size ?? modelDefaults.batch_size}
+      >
         <input
           type="range"
-          value={options.batch_size ?? 1}
+          value={options.batch_size ?? modelDefaults.batch_size}
           disabled={!modelFeatures?.batch_size}
-          min={1}
-          max={8}
-          step={1}
+          min={modelRanges.batch_size.min}
+          max={modelRanges.batch_size.max}
+          step={modelRanges.batch_size.step}
           onChange={(e) =>
             setOptions({
               ...options,
@@ -209,7 +222,7 @@ export const PaintingSettings = (props: {
       <SettingItem title={"Negative"} className={styles["full-width"]}>
         <input
           type="text"
-          value={options.negative_prompt ?? ""}
+          value={options.negative_prompt ?? modelDefaults.negative_prompt}
           disabled={!modelFeatures?.negative_prompt}
           onInput={(e) =>
             setOptions({

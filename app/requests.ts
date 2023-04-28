@@ -166,6 +166,20 @@ export async function requestUsage() {
   };
 }
 
+function convertToHuggingFaceTextToImageModelParameters(
+  options?: DiffusionOptions,
+) {
+  if (!options) return {};
+  const parameters = {} as any;
+  if (options.negative_prompt)
+    parameters.negative_prompt = options.negative_prompt;
+  if (options.width) parameters.width = options.width;
+  if (options.height) parameters.height = options.height;
+  if (options.steps) parameters.num_inference_steps = options.steps;
+  if (options.cfg_scale) parameters.guidance_scale = options.cfg_scale;
+  return Object.keys(parameters).length > 0 ? { parameters } : {};
+}
+
 export async function requestHuggingFaceTextToImageModel(
   messages: Message[],
   options?: {
@@ -176,18 +190,9 @@ export async function requestHuggingFaceTextToImageModel(
   },
 ) {
   const prompt = messages[messages.length - 1].content;
-  // TODO: default value
-  const config = options?.diffusion
-    ? {
-        parameters: {
-          negative_prompt: options.diffusion.negative_prompt ?? "",
-          width: options.diffusion.width ?? 512,
-          height: options.diffusion.height ?? 512,
-          num_inference_steps: options.diffusion.steps ?? 20,
-          guidance_scale: options.diffusion.cfg_scale ?? 7.5,
-        },
-      }
-    : {};
+  const config = convertToHuggingFaceTextToImageModelParameters(
+    options?.diffusion,
+  );
   const req = {
     inputs: prompt,
     ...config,
